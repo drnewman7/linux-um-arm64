@@ -1,0 +1,79 @@
+name: Build UML kernel (Android + binder)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      MAKE_ARGS: ARCH=um SUBARCH=arm64 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ CLANG_TARGET_FLAGS_arm64=aarch64-linux-android30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Install host packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y flex bison bc libssl-dev libelf-dev file
+
+      - name: Locate the Android NDK
+        run: |
+          NDK="${ANDROID_NDK_LATEST_HOME:-$ANDROID_NDK_ROOT}"
+          echo "NDK path: $NDK"
+          test -d "$NDK"
+          NDK_BIN="$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          echo "NDK_BIN=$NDK_BIN" >> "$GITHUB_ENV"
+          "$NDK_BIN/clang" --version | head -1
+
+      - name: Configure (defconfig + Android options)
+        run: |
+          make $MAKE_ARGS LLVM=$NDK_BIN/ defconfig
+          scripts/config \
+            --enable STATIC_LINK \
+            --enable ANDROID_BINDER_IPC \
+            --enable ANDROID_BINDERFS \
+            --enable EROFS_FS \
+            --enable PSI \
+            --enable MEMCG \
+            --enable NAMESPACES \
+            --enable USER_NS \
+            --enable PID_NS \
+            --enable IPC_NS \
+            --enable UTS_NS \
+            --enable NET_NS
+          make $MAKE_ARGS LLVM=$NDK_BIN/ olddefconfig
+          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS)=' .config | tee config-check.txt
+
+      - name: Build kernel
+        run: |
+          set -o pipefail
+          make $MAKE_ARGS LLVM=$NDK_BIN/ -j"$(nproc)" 2>&1 | tee build.log
+
+      - name: Summary and artifacts
+        if: always()
+        run: |
+          cp .config kernel-config.txt 2>/dev/null || true
+          {
+            echo '### Result'
+            echo '```'
+            cat config-check.txt 2>/dev/null || true
+            ls -l linux 2>&1 || true
+            file linux 2>&1 || true
+            echo '--- last lines of build log ---'
+            tail -n 40 build.log 2>/dev/null || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload kernel and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: uml-android-kernel
+          path: |
+            linux
+            kernel-config.txt
+            build.log
+          if-no-files-found: warn
