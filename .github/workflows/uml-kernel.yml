@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 120
     env:
-      MAKE_ARGS: ARCH=um SUBARCH=arm64 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ CLANG_TARGET_FLAGS_arm64=aarch64-linux-android30
+      MAKE_ARGS: ARCH=um SUBARCH=arm64 LLVM_IAS=1 HOSTCC=gcc HOSTCXX=g++ HOSTLDFLAGS=-fuse-ld=bfd CLANG_TARGET_FLAGS_arm64=aarch64-linux-android30
     steps:
       - uses: actions/checkout@v4
         with:
