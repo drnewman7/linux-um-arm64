@@ -43,9 +43,17 @@ jobs:
             --enable PID_NS \
             --enable IPC_NS \
             --enable UTS_NS \
-            --enable NET_NS
+            --enable NET_NS \
+            --enable AUDIT \
+            --enable SECURITY \
+            --enable SECURITY_NETWORK \
+            --enable NETWORK_SECMARK \
+            --enable SECURITY_SELINUX \
+            --enable SECURITY_SELINUX_DEVELOP \
+            --enable EXT4_FS_SECURITY \
+            --enable UNIX98_PTYS
           make $MAKE_ARGS LLVM=$NDK_BIN/ olddefconfig
-          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS)=' .config | tee config-check.txt
+          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS|AUDIT|SECURITY_SELINUX|UNIX98_PTYS)=' .config | tee config-check.txt
 
       - name: Build kernel
         run: |
