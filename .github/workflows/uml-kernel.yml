@@ -51,9 +51,10 @@ jobs:
             --enable SECURITY_SELINUX \
             --enable SECURITY_SELINUX_DEVELOP \
             --enable EXT4_FS_SECURITY \
-            --enable UNIX98_PTYS
+            --enable UNIX98_PTYS \
+            --set-str LSM "landlock,lockdown,yama,loadpin,safesetid,selinux,ipe,bpf"
           make $MAKE_ARGS LLVM=$NDK_BIN/ olddefconfig
-          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS|AUDIT|SECURITY_SELINUX|UNIX98_PTYS)=' .config | tee config-check.txt
+          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS|AUDIT|SECURITY_SELINUX|UNIX98_PTYS|LSM)=' .config | tee config-check.txt
 
       - name: Build kernel
         run: |
