@@ -28,6 +28,30 @@ jobs:
           echo "NDK_BIN=$NDK_BIN" >> "$GITHUB_ENV"
           "$NDK_BIN/clang" --version | head -1
 
+      - name: Patch UML to expose mmap_rnd_bits sysctls (Android init needs them)
+        run: |
+          cat >> arch/um/Kconfig <<'KEOF'
+
+          config HAVE_ARCH_MMAP_RND_BITS
+          	default y
+
+          config HAVE_ARCH_MMAP_RND_COMPAT_BITS
+          	default y
+
+          config ARCH_MMAP_RND_BITS_MIN
+          	default 24
+
+          config ARCH_MMAP_RND_BITS_MAX
+          	default 33
+
+          config ARCH_MMAP_RND_COMPAT_BITS_MIN
+          	default 8
+
+          config ARCH_MMAP_RND_COMPAT_BITS_MAX
+          	default 16
+          KEOF
+          tail -n 22 arch/um/Kconfig
+
       - name: Configure (defconfig + Android options)
         run: |
           make $MAKE_ARGS LLVM=$NDK_BIN/ defconfig
