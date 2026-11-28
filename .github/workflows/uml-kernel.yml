@@ -52,9 +52,24 @@ jobs:
             --enable SECURITY_SELINUX_DEVELOP \
             --enable EXT4_FS_SECURITY \
             --enable UNIX98_PTYS \
+            --enable MD \
+            --enable BLK_DEV_DM \
+            --enable DM_BUFIO \
+            --enable DM_VERITY \
+            --enable FUSE_FS \
+            --enable FS_VERITY \
+            --enable FS_ENCRYPTION \
+            --enable BPF_SYSCALL \
+            --enable CGROUP_BPF \
+            --enable SECCOMP \
+            --enable SECCOMP_FILTER \
+            --enable USERFAULTFD \
+            --enable INOTIFY_USER \
+            --enable CGROUP_PIDS \
+            --enable KEYS \
             --set-str LSM "landlock,lockdown,yama,loadpin,safesetid,selinux,ipe,bpf"
           make $MAKE_ARGS LLVM=$NDK_BIN/ olddefconfig
-          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS|AUDIT|SECURITY_SELINUX|UNIX98_PTYS|LSM)=' .config | tee config-check.txt
+          grep -E '^CONFIG_(STATIC_LINK|ANDROID_BINDER_IPC|ANDROID_BINDERFS|EROFS_FS|PSI|MEMCG|USER_NS|AUDIT|SECURITY_SELINUX|UNIX98_PTYS|LSM|BLK_DEV_DM|DM_VERITY|FUSE_FS|FS_VERITY|BPF_SYSCALL|SECCOMP|USERFAULTFD)=' .config | tee config-check.txt
 
       - name: Build kernel
         run: |
